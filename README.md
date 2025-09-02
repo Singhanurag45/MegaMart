@@ -20,10 +20,21 @@ Image Uploads: Product images are handled using Multer for file uploads.
 📸 Screenshots
 Here are some glimpses of MegaMart in action:
 
-Homepage / Banner
-Product Listing
-Shopping Cart
-Login / Signup
+### 🏠 Home Page
+![HomePage](ScreenShots/HomePage.png)
+
+### 👶 Kids Section
+![Kids](ScreenShots/kids.png)
+
+### 📝 Sign Up
+![SignUp](ScreenShots/SignUp.png)
+
+### 🛒 Cart Page
+![Cart](ScreenShots/Cart.png)
+
+### 📌 Footer
+![Footer](ScreenShots/Footer.png)
+
 
 🛠️ Tech Stack
 Frontend: React, Vite, React Router, Axios, Tailwind CSS, Lucide React
