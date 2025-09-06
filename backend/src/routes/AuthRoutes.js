@@ -1,17 +1,18 @@
 import express from "express";
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
+import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// 🔹 Signup
+// 🔹 Signups
 router.post("/signup", async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser)
-      return res.status(400).json({ error: "Email already exists" });
+      return res.status(400).json({ error: "Email a-lready exists" });
 
     const user = new User({ name, email, password });
     await user.save();
@@ -45,15 +46,59 @@ router.post("/login", async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        isAdmin: user.isAdmin,
       },
     });
   } catch (err) {
     res.status(500).json({ error: "Server error" });
   }
 });
+router.get("/profile", protect, (req, res) => {
+  // The 'protect' middleware has already found the user and attached it to req.user
+  if (req.user) {
+    res.json({
+      id: req.user._id,
+      name: req.user.name,
+      email: req.user.email,
+      gender: req.user.gender,
+      age: req.user.age,
+      address: req.user.address,
+      phone: req.user.phone,
+    });
+  } else {
+    res.status(404).json({ error: "User not found" });
+  }
+});
 
+router.put("/profile", protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
 
-// 🔹 Logout 
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    user.name = req.body.name || user.name;
+    user.email = req.body.email || user.email;
+    user.gender = req.body.gender || user.gender;
+    user.age = req.body.age || user.age;
+    user.address = req.body.address || user.address;
+    user.phone = req.body.phone || user.phone;
+
+    const updatedUser = await user.save();
+
+    res.json({
+      id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      gender: updatedUser.gender,
+      age: updatedUser.age,
+      address: updatedUser.address,
+      phone: updatedUser.phone,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+// 🔹 Logout
 router.post("/logout", (req, res) => {
   // For JWT, logout is primarily handled on the client-side by deleting the token.
   // This server-side route is here to confirm the action.

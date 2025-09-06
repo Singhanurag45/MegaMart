@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import cors from "cors";
 import productRoutes from "./routes/ProductRoutes.js";
 import authRoutes from "./routes/AuthRoutes.js";
+import orderRoutes from "./routes/OrderRoutes.js";
 import path from "path";
 import dotenv from "dotenv";
 dotenv.config();
@@ -29,6 +30,7 @@ mongoose
 // Routes
 app.use("/api/products", productRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/orders", orderRoutes);
 
 // Optional test route
 app.get("/", (req, res) => {
