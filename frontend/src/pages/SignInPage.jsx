@@ -1,4 +1,8 @@
-import React, { useState } from "react"; // ⬅️ import useState
+// src/pages/SignInPage.jsx
+
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation, Link as RouterLink } from "react-router-dom";
+import api from "../api/axios";
 import {
   Box,
   Card,
@@ -8,10 +12,11 @@ import {
   Divider,
   Link,
   Stack,
+  Alert,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import GoogleIcon from "@mui/icons-material/Google";
-import FacebookIcon from "@mui/icons-material/Facebook";
+import logo from "../../assets/Logo.jpg";
 
 const StyledCard = styled(Card)(({ theme }) => ({
   maxWidth: 500,
@@ -24,15 +29,42 @@ const StyledCard = styled(Card)(({ theme }) => ({
 }));
 
 export default function SignInPage() {
-  // 1. Add state to hold email and password
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  // 2. Create a function to handle the form submission
-  const handleSignIn = () => {
-    // This is where you would add your authentication logic (e.g., API call)
-    console.log("Signing in with:", { email, password });
-    // For now, we'll just log the data to the console.
+  useEffect(() => {
+    if (location.state?.message) {
+      setSuccessMessage(location.state.message);
+    }
+  }, [location.state]);
+
+  const handleSignIn = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    if (!email || !password) {
+      setError("Both email and password are required.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await api.post("/auth/login", { email, password });
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+      navigate("/");
+      window.dispatchEvent(new Event("storage"));
+    } catch (err) {
+      setError(err.response?.data?.error || "An unexpected error occurred.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -43,48 +75,76 @@ export default function SignInPage() {
         alignItems: "center",
         justifyContent: "center",
         background: "#f5f5f5",
+        p: 2,
       }}
     >
       <StyledCard>
-        <Typography
-          variant="h6"
-          sx={{ mb: 2, fontWeight: "bold", color: "#3b82f6" }}
+        {/* 👇 FIX: Changed <Typography> to <Box> to prevent nesting error */}
+        <Box
+          className="flex items-center justify-center gap-[4px]"
+          sx={{ mb: 3 }}
         >
-          Sitemark
-        </Typography>
+          <img
+            src={logo}
+            alt="MegaMart Logo"
+            className="h-10 w-10 rounded-full object-cover"
+          />
+          <h1 className="text-2xl font-extrabold tracking-wide">
+            <span className="text-red-600">Mega</span>
+            <span className="text-blue-600">Mart</span>
+          </h1>
+        </Box>
+        {/* 👇 END FIX */}
 
-        <Typography variant="h4" sx={{ mb: 3, fontWeight: "bold" }}>
+        <Typography
+          variant="h4"
+          sx={{ mb: 3, fontWeight: "bold", textAlign: "center" }}
+        >
           Sign in
         </Typography>
 
-        <Stack spacing={2}>
-          {/* 3. Connect state to the input fields */}
-          <TextField
-            fullWidth
-            label="Email"
-            variant="outlined"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <TextField
-            fullWidth
-            label="Password"
-            type="password"
-            variant="outlined"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+        {successMessage && !error && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            {successMessage}
+          </Alert>
+        )}
 
-          {/* 4. Attach the handler to the button's onClick event */}
-          <Button
-            variant="contained"
-            fullWidth
-            size="large"
-            onClick={handleSignIn}
-          >
-            Sign in
-          </Button>
-        </Stack>
+        <Box component="form" onSubmit={handleSignIn}>
+          <Stack spacing={2}>
+            <TextField
+              fullWidth
+              label="Email"
+              type="email"
+              variant="outlined"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <TextField
+              fullWidth
+              label="Password"
+              type="password"
+              variant="outlined"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <Button
+              type="submit"
+              variant="contained"
+              fullWidth
+              size="large"
+              disabled={loading}
+            >
+              {loading ? "Signing In..." : "Sign in"}
+            </Button>
+          </Stack>
+        </Box>
 
         <Divider sx={{ my: 3 }}>or</Divider>
 
@@ -97,19 +157,11 @@ export default function SignInPage() {
           >
             Sign in with Google
           </Button>
-          <Button
-            variant="outlined"
-            fullWidth
-            startIcon={<FacebookIcon />}
-            sx={{ textTransform: "none" }}
-          >
-            Sign in with Facebook
-          </Button>
         </Stack>
 
-        <Typography align="center" sx={{ mt: 2 }}>
+        <Typography align="center" sx={{ mt: 3 }}>
           Don’t have an account?{" "}
-          <Link href="/signup" underline="hover">
+          <Link component={RouterLink} to="/signup" underline="hover">
             Sign up
           </Link>
         </Typography>

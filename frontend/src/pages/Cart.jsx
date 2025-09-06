@@ -65,7 +65,6 @@ export default function Cart({ cart, removeFromCart, updateQuantity }) {
                     </div>
                     <div className="flex flex-1 items-end justify-between text-sm">
                       <div className="flex items-center border border-gray-300 rounded-md">
-                        {/* You'll need to implement the updateQuantity function in App.jsx */}
                         <button
                           onClick={() =>
                             updateQuantity(item._id, item.quantity - 1)
@@ -86,7 +85,6 @@ export default function Cart({ cart, removeFromCart, updateQuantity }) {
                       </div>
 
                       <div className="flex">
-                        {/* You'll need to implement the removeFromCart function in App.jsx */}
                         <button
                           type="button"
                           onClick={() => removeFromCart(item._id, true)} // Pass true to remove all quantities
@@ -129,9 +127,13 @@ export default function Cart({ cart, removeFromCart, updateQuantity }) {
                 </div>
               </div>
               <div className="mt-6">
-                <button className="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors shadow-md">
+                {/* ✅ Updated Proceed to Checkout button */}
+                <Link
+                  to="/checkout"
+                  className="w-full block text-center bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors shadow-md"
+                >
                   Proceed to Checkout
-                </button>
+                </Link>
               </div>
               <div className="mt-6 flex justify-center text-center text-sm text-gray-500">
                 <p>
@@ -140,8 +142,7 @@ export default function Cart({ cart, removeFromCart, updateQuantity }) {
                     to="/"
                     className="font-medium text-blue-600 hover:text-blue-500"
                   >
-                    Continue Shopping
-                    <span aria-hidden="true"> &rarr;</span>
+                    Continue Shopping <span aria-hidden="true"> &rarr;</span>
                   </Link>
                 </p>
               </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import StarIcon from "@mui/icons-material/Star";
 
 export default function ProductDetailPage({ addToCart }) {
   const { id } = useParams(); // Get the product ID from the URL
@@ -8,6 +9,10 @@ export default function ProductDetailPage({ addToCart }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
+
+  // ⭐ Random rating & reviews
+  const [rating] = useState((Math.random() * (5 - 3.5) + 3.5).toFixed(1));
+  const [reviews] = useState(Math.floor(Math.random() * 200) + 20); // 20–220 reviews
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -22,10 +27,9 @@ export default function ProductDetailPage({ addToCart }) {
       }
     };
     fetchProduct();
-  }, [id]); // Re-run effect if the ID changes
+  }, [id]);
 
   const handleAddToCart = () => {
-    // Add the product to the cart 'quantity' times
     for (let i = 0; i < quantity; i++) {
       addToCart(product);
     }
@@ -53,6 +57,23 @@ export default function ProductDetailPage({ addToCart }) {
           <h1 className="text-4xl font-extrabold tracking-tight text-gray-900">
             {product.name}
           </h1>
+
+          {/* ⭐ Ratings */}
+          <div className="flex items-center mt-2 mb-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <StarIcon
+                key={i}
+                fontSize="small"
+                style={{
+                  color: i < Math.floor(rating) ? "gold" : "lightgray",
+                }}
+              />
+            ))}
+            <span className="ml-2 text-gray-700 text-sm">
+              {rating} / 5 ({reviews} reviews)
+            </span>
+          </div>
+
           <p className="text-3xl text-gray-800 my-4">${product.price}</p>
           <p className="text-gray-600 leading-relaxed mb-6">
             {product.description}

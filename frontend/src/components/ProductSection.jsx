@@ -25,7 +25,7 @@ const ProductSection = ({
             to={categoryLink}
             className="hidden sm:flex items-center whitespace-nowrap text-base font-semibold text-blue-600 hover:text-blue-500 transition-colors"
           >
-            View All
+            View All 
             <ArrowRight className="ml-2 h-5 w-5" />
           </Link>
         </div>

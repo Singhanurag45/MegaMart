@@ -8,6 +8,8 @@ import {
 
 // Components
 import Navbar from "./components/Navbar";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AdminRoute from "./components/AdminRoute"; // Make sure this is imported
 
 // Pages
 import Home from "./pages/Home.jsx";
@@ -18,17 +20,19 @@ import MenPage from "./pages/MenPage.jsx";
 import WomenPage from "./pages/WomenPage.jsx";
 import KidsPage from "./pages/KidsPage.jsx";
 import ProductDetailPage from "./components/ProductDetailPage.jsx";
+import ProfilePage from "./pages/ProfilePage.jsx";
+import CheckoutPage from "./pages/CheckoutPage.jsx";
+import MyOrdersPage from "./pages/MyOrdersPage.jsx";
+import AdminDashboard from "./pages/AdminDashboard.jsx";
 
-// Main component to handle routing logic
 function AppContent() {
   const location = useLocation();
   const [cart, setCart] = useState([]);
 
-  // ✅ UPDATED LOGIC: Show Navbar on all pages except auth pages.
+  const clearCart = () => setCart([]);
   const authPaths = ["/signin", "/signup"];
   const showNavbar = !authPaths.includes(location.pathname);
 
-  // Advanced function to add items or increment quantity
   const addToCart = (product) => {
     setCart((prevCart) => {
       const existingItem = prevCart.find((item) => item._id === product._id);
@@ -44,28 +48,42 @@ function AppContent() {
     });
   };
 
-  // Function to remove items or decrement quantity
-  const removeFromCart = (productId) => {
+  // 👇 CORRECTED: This function now handles both decrementing and full removal
+  const removeFromCart = (productId, removeAll = false) => {
     setCart((prevCart) => {
-      return prevCart.reduce((acc, item) => {
-        if (item._id === productId) {
-          if (item.quantity > 1) {
-            acc.push({ ...item, quantity: item.quantity - 1 });
-          }
-        } else {
-          acc.push(item);
-        }
-        return acc;
-      }, []);
+      const existingItem = prevCart.find((item) => item._id === productId);
+
+      // If removeAll is true or quantity is 1, filter out the item
+      if (removeAll || existingItem?.quantity === 1) {
+        return prevCart.filter((item) => item._id !== productId);
+      }
+
+      // Otherwise, just decrement the quantity
+      return prevCart.map((item) =>
+        item._id === productId ? { ...item, quantity: item.quantity - 1 } : item
+      );
     });
+  };
+
+  // A wrapper for removeFromCart to handle decrementing
+  const updateQuantity = (productId, newQuantity) => {
+    if (newQuantity > 0) {
+      setCart(
+        cart.map((item) =>
+          item._id === productId ? { ...item, quantity: newQuantity } : item
+        )
+      );
+    } else {
+      removeFromCart(productId, true); // Remove if quantity is 0 or less
+    }
   };
 
   return (
     <>
-      {/* This will now render the Navbar on the desired pages */}
       {showNavbar && <Navbar cart={cart} />}
 
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<Home addToCart={addToCart} />} />
         <Route path="/men" element={<MenPage addToCart={addToCart} />} />
         <Route path="/women" element={<WomenPage addToCart={addToCart} />} />
@@ -74,9 +92,58 @@ function AppContent() {
           path="/product/:id"
           element={<ProductDetailPage addToCart={addToCart} />}
         />
-        <Route path="/cart" element={<Cart cart={cart} />} />
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/signin" element={<SignInPage />} />
+
+        {/* 👇 CORRECTED: Pass all necessary functions to the Cart component */}
+        <Route
+          path="/cart"
+          element={
+            <Cart
+              cart={cart}
+              addToCart={addToCart}
+              removeFromCart={removeFromCart}
+              updateQuantity={updateQuantity}
+            />
+          }
+        />
+
+        {/* Protected User Routes */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/checkout"
+          element={
+            <ProtectedRoute>
+              <CheckoutPage cart={cart} clearCart={clearCart} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-orders"
+          element={
+            <ProtectedRoute>
+              <MyOrdersPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 👇 ADDED: The missing route for the admin dashboard */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          }
+        />
+
         <Route
           path="*"
           element={
@@ -88,7 +155,6 @@ function AppContent() {
   );
 }
 
-// The main App component now just sets up the Router
 export default function App() {
   return (
     <Router>

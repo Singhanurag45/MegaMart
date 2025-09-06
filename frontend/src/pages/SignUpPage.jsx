@@ -1,4 +1,8 @@
-import React, { useState } from "react"; // ⬅️ import useState
+// src/pages/SignUpPage.jsx
+
+import React, { useState } from "react";
+import { useNavigate, Link as RouterLink } from "react-router-dom";
+import api from "../api/axios";
 import {
   Box,
   Card,
@@ -6,14 +10,13 @@ import {
   Typography,
   Button,
   Divider,
-  FormControlLabel,
-  Checkbox,
   Link,
   Stack,
+  Alert,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import GoogleIcon from "@mui/icons-material/Google";
-import FacebookIcon from "@mui/icons-material/Facebook";
+import logo from "../../assets/Logo.jpg";
 
 const StyledCard = styled(Card)(({ theme }) => ({
   maxWidth: 500,
@@ -26,15 +29,34 @@ const StyledCard = styled(Card)(({ theme }) => ({
 }));
 
 export default function SignUpPage() {
-  // 1. Add state for all form fields
-  const [fullName, setFullName] = useState("");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  // 2. Create a handler function for sign-up
-  const handleSignUp = () => {
-    // This is where you would call your backend API to create a new user
-    console.log("Signing up with:", { fullName, email, password });
+  const handleSignUp = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    if (!name || !email || !password) {
+      setError("All fields are required.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      await api.post("/auth/signup", { name, email, password });
+      navigate("/signin", {
+        state: { message: "Registration successful! Please sign in." },
+      });
+    } catch (err) {
+      setError(err.response?.data?.error || "An unexpected error occurred.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -45,60 +67,80 @@ export default function SignUpPage() {
         alignItems: "center",
         justifyContent: "center",
         background: "#f5f5f5",
+        p: 2,
       }}
     >
       <StyledCard>
-        <Typography
-          variant="h6"
-          sx={{ mb: 2, fontWeight: "bold", color: "#3b82f6" }}
+        {/* 👇 FIX: Changed <Typography> to <Box> to prevent nesting error */}
+        <Box
+          className="flex items-center justify-center gap-[4px]"
+          sx={{ mb: 3 }}
         >
-          Sitemark
+          <img
+            src={logo}
+            alt="MegaMart Logo"
+            className="h-10 w-10 rounded-full object-cover"
+          />
+          <h1 className="text-2xl font-extrabold tracking-wide">
+            <span className="text-red-600">Mega</span>
+            <span className="text-blue-600">Mart</span>
+          </h1>
+        </Box>
+        {/* 👇 END FIX */}
+
+        <Typography
+          variant="h4"
+          sx={{ mb: 3, fontWeight: "bold", textAlign: "center" }}
+        >
+          Create an Account
         </Typography>
 
-        <Typography variant="h4" sx={{ mb: 3, fontWeight: "bold" }}>
-          Sign up
-        </Typography>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
-        <Stack spacing={2}>
-          {/* 3. Connect state to the input fields */}
-          <TextField
-            fullWidth
-            label="Full name"
-            variant="outlined"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-          />
-          <TextField
-            fullWidth
-            label="Email"
-            variant="outlined"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <TextField
-            fullWidth
-            label="Password"
-            type="password"
-            variant="outlined"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-
-          <FormControlLabel
-            control={<Checkbox />}
-            label="I want to receive updates via email."
-          />
-
-          {/* 4. Attach the handler to the button's onClick event */}
-          <Button
-            variant="contained"
-            fullWidth
-            size="large"
-            onClick={handleSignUp}
-          >
-            Sign up
-          </Button>
-        </Stack>
+        <Box component="form" onSubmit={handleSignUp}>
+          <Stack spacing={2}>
+            <TextField
+              fullWidth
+              label="Full name"
+              variant="outlined"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+            <TextField
+              fullWidth
+              label="Email"
+              type="email"
+              variant="outlined"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <TextField
+              fullWidth
+              label="Password"
+              type="password"
+              variant="outlined"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              inputProps={{ minLength: 6 }}
+            />
+            <Button
+              type="submit"
+              variant="contained"
+              fullWidth
+              size="large"
+              disabled={loading}
+            >
+              {loading ? "Signing Up..." : "Sign up"}
+            </Button>
+          </Stack>
+        </Box>
 
         <Divider sx={{ my: 3 }}>or</Divider>
 
@@ -111,19 +153,11 @@ export default function SignUpPage() {
           >
             Sign up with Google
           </Button>
-          <Button
-            variant="outlined"
-            fullWidth
-            startIcon={<FacebookIcon />}
-            sx={{ textTransform: "none" }}
-          >
-            Sign up with Facebook
-          </Button>
         </Stack>
 
-        <Typography align="center" sx={{ mt: 2 }}>
+        <Typography align="center" sx={{ mt: 3 }}>
           Already have an account?{" "}
-          <Link href="/signin" underline="hover">
+          <Link component={RouterLink} to="/signin" underline="hover">
             Sign in
           </Link>
         </Typography>
